@@ -1,3 +1,5 @@
 .env
 shortener.db
 .vscode/settings.json
+/-- SQLite.sql
+/test.py

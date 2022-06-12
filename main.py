@@ -9,46 +9,22 @@
 # 9. Creating a HTMLResponse to the index page.
 # 10. Creating a get_index function to return the index page.
 import validators
+
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from starlette.datastructures import URL
 from fastapi.staticfiles import StaticFiles
 
-from .config import get_settings
 from . import crud, models, schemas
 from .database import SessionLocal, engine
-
-
-
-# It gets the base URL from the admin config and then replaces the path with the key.
-# 1. First, we get the base URL from the settings.
-# 2. Then, we create a URL object from the base URL.
-# 3. We create an admin endpoint from the app.
-# 4. We replace the path of the base URL with the admin endpoint.
-# 5. We return the URL object.
-def get_admin_info(db_url: models.URL) -> schemas.URLInfo:
-    """Get baseline URL from admin config
-
-    Args:
-        db_url (models.URL): task the database URL
-
-    Returns:
-        schemas.URLInfo: returns a json object with deatails about the URL
-    """
-    base_url = URL(get_settings().base_url)
-    admin_endpoint = app.url_path_for("administration info", secret_key=db_url.key)
-    db_url.url = str(base_url.replace(path=db_url.key))
-    db_url.admin_url = str(base_url.replace(path=admin_endpoint))
-    return db_url
-
+from .config import get_settings
 
 # It creates a new FastAPI application object.
 app = FastAPI()
 
 # It tells the application that the static files are located in the static directory
 app.mount("/static", StaticFiles(directory="./shortener_app/static"), name="static")
-
 
 # This code creates a database file in the directory of your choosing. Binds the database engine
 models.Base.metadata.create_all(bind=engine)
@@ -65,14 +41,68 @@ def get_db():
 
     Yields:
         class: new database sessions.
-        The try … finally block to close the database conection
+        The try … finally block to close the database connection
         in any case, even when an error occurs during the request.
     """
     db = SessionLocal()
     try:
         yield db
     finally:
-        db.close
+        db.close()
+
+
+# It gets the base URL from the admin config and then replaces the path with the key.
+# 1. First, we get the base URL from the settings.
+# 2. Then, we create a URL object from the base URL.
+# 3. We create an admin endpoint from the app.
+# 4. We replace the path of the base URL with the admin endpoint.
+# 5. We return the URL object.
+def get_admin_info(db_url: models.URL) -> schemas.URLInfo:
+    """Get baseline URL from admin config
+
+    Args:
+        db_url (models.URL): task the database URL
+
+    Returns:
+        schemas.URLInfo: returns a json object with details about the URL
+    """
+    base_url = URL(get_settings().base_url)
+    admin_endpoint = app.url_path_for("administration info", secret_key=db_url.secret_key)
+    db_url.url = str(base_url.replace(path=db_url.key))
+    db_url.admin_url = str(base_url.replace(path=admin_endpoint))
+    return db_url
+
+
+# 1. First, we import the HTTPException class from fastapi.exceptions. 2. Then, we define a function
+# raise_bad_request that takes in a message as an argument and raises an HTTPException with a status code 400. 3.
+# Finally, we raise an HTTPException with a status code 400 when the provided URL is not valid.
+def raise_bad_request(message):
+    """Use to validate bad request.
+
+    Args:
+        message (str): message as an argument
+    and raises an HTTPException with a status code 400
+
+    Raises:
+        HTTPException:  raised when the provided URL is not valid
+    """
+
+    raise HTTPException(detail=message)
+
+# 1. First, it checks if the URL exists in the database.
+# 2. If it does, it returns the URL.
+# 3. If it does not, it raises an HTTPException with a 404 status code and a message.
+def raise_not_found(request):
+    """Error if key does not match any URLs in the database
+
+    Args:
+        request (str): a URL as a string
+
+    Raises:
+        HTTPException:  404 HTTP status code. URL does not exist
+    """
+    message = f"URL '{request.url}' doesnt exist"
+    raise HTTPException(status_code=404, detail=message)
 
 
 # main point of interaction
@@ -107,23 +137,6 @@ def read_root():
 """
 
 
-# 1. First, we import the HTTPException class from fastapi.exceptions.
-# 2. Then, we define a function raise_bad_request that takes in a message as an argument and raises an HTTPException with a status code 400.
-# 3. Finally, we raise an HTTPException with a status code 400 when the provided URL is not valid.
-def raise_bad_request(message):
-    """Use to validate bad request.
-
-    Args:
-        message (str): message as an argument
-    and raises an HTTPException with a status code 400
-
-    Raises:
-        HTTPException:  raised when the provided URL is not valid
-    """
-
-    raise HTTPException(status=400, detail=message)
-
-
 # 1. The first thing you do is create a URLInfo object that matches the
 #    URLInfo schema.
 # 2. You then check if the URL is valid. If it’s not, you raise a
@@ -139,7 +152,7 @@ def create_url(url: schemas.URLBase, db: Session = Depends(get_db)):
 
     Args:
         url (schemas.URLBase): Expects a URL string as a POST request body.
-        By passing get_db into Depends(), you establish a database session
+        By passing get_db into `Depends()`, you establish a database session
         for the request and close the session when the request is finished
 
         db (Session, optional): _description_. Defaults to Depends(get_db()).
@@ -153,28 +166,7 @@ def create_url(url: schemas.URLBase, db: Session = Depends(get_db)):
     # create a database entry for your target_url.
     db_url = crud.create_db_url(db=db, url=url)
 
-    # adds key and secret_key to db_url to match the required URLInfo
-    # schema that you need to return at the end of the function.
-    db_url.url = db_url.key
-    db_url.admin_url = db_url.secret_key
-
     return get_admin_info(db_url)
-
-
-# 1. First, it checks if the URL exists in the database.
-# 2. If it does, it returns the URL.
-# 3. If it doesn’t, it raises an HTTPException with a 404 status code and a message.
-def raise_not_found(request):
-    """Error if key does not match any URLs in the database
-
-    Args:
-        request (str): a URL as a string
-
-    Raises:
-        HTTPException:  404 HTTP status code. URL does not exist
-    """
-    message = f"URL '{request.url}' doesnt exist"
-    raise HTTPException(status_code=404, detail=message)
 
 
 # 1. The @app.get decorator is used to register the URL path and HTTP verb for the function.
@@ -184,7 +176,7 @@ def raise_not_found(request):
 # 5. If the URL entry is not found, the function raises a NotFound exception.
 @app.get("/{url_key}")
 def forward_to_target_url(
-    url_key: str, request: Request, db: Session = Depends(get_db)
+        url_key: str, request: Request, db: Session = Depends(get_db)
 ):
     """_summary_
 
@@ -202,7 +194,6 @@ def forward_to_target_url(
         return RedirectResponse(db_url.target_url)
     else:
         raise_not_found(request)
-
 
 
 # It gets the information about a URL from the database.
@@ -223,7 +214,7 @@ def get_url_info(secret_key: str, request: Request, db: Session = Depends(get_db
 
     Returns:
         _type_: _description_
-    """    
+    """
     if db_url := crud.get_db_url_by_secret_key(db=db, secret_key=secret_key):
         return get_admin_info(db_url)
     else:
@@ -245,9 +236,9 @@ def delete_url(secret_key: str, request: Request, db: Session = Depends(get_db))
 
     Returns:
         str: A message if shortened URL was Successfully deleted, if not a 404 error
-    """    
+    """
     if db_url := crud.deactivate_db_url_by_secret_key(db, secret_key):
-        message = f"Successfully deleted shortened URL for '{db_url}'"
-        return {"deatail": message}
+        message = f"Successfully deleted shortened URL for '{db_url.target_url}'"
+        return {"detail": message}
     else:
         raise_not_found(request)
