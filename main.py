@@ -213,7 +213,7 @@ def get_url_info(secret_key: str, request: Request, db: Session = Depends(get_db
         db (Session, optional): _description_. Defaults to Depends(get_db).
 
     Returns:
-        _type_: _description_
+        (json): Information about a URL
     """
     if db_url := crud.get_db_url_by_secret_key(db=db, secret_key=secret_key):
         return get_admin_info(db_url)
@@ -227,15 +227,15 @@ def get_url_info(secret_key: str, request: Request, db: Session = Depends(get_db
 # 4. If the secret key is not valid, it raises a 404 error.
 @app.delete("/admin/{secret_key}")
 def delete_url(secret_key: str, request: Request, db: Session = Depends(get_db)):
-    """Deactivates URL 
+    """A function to deactivates a URL
 
     Args:
-        secret_key (str):  Secret key of URL
+        secret_key (str):  Secret key of URLn
         request (Request): body of the request
         db (Session, optional): _description_. Defaults to Depends(get_db).
 
     Returns:
-        str: A message if shortened URL was Successfully deleted, if not a 404 error
+        str: A success message if shortened URL was deleted, if not a 404 error
     """
     if db_url := crud.deactivate_db_url_by_secret_key(db, secret_key):
         message = f"Successfully deleted shortened URL for '{db_url.target_url}'"
