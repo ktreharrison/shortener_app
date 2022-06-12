@@ -4,11 +4,12 @@ import string
 from sqlalchemy.orm import Session
 from . import crud
 
+
 # 1. Import the secrets module.
 # 2. Import the string module.
 # 3. Create a string of all uppercase letters and numbers.
 # 4. Create a variable to store the random key.
-# 5. Create a for loop to generate a random character from the string of characters.
+# 5. A loop to generate random characters from the string of characters.
 # 6. Join the random characters together to create a random key.
 # 7. Return the random key.
 def create_random_key(length: int = 5) -> str:

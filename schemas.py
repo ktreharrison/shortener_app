@@ -1,4 +1,4 @@
-# It creates a class that will be used to create objects that will be used 
+# It creates a class that will be used to create objects that will be used
 # to create a schema for the data that will be input.
 from pydantic import BaseModel
 

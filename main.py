@@ -67,7 +67,9 @@ def get_admin_info(db_url: models.URL) -> schemas.URLInfo:
         schemas.URLInfo: returns a json object with details about the URL
     """
     base_url = URL(get_settings().base_url)
-    admin_endpoint = app.url_path_for("administration info", secret_key=db_url.secret_key)
+    admin_endpoint = app.url_path_for(
+        "administration info", secret_key=db_url.secret_key
+    )
     db_url.url = str(base_url.replace(path=db_url.key))
     db_url.admin_url = str(base_url.replace(path=admin_endpoint))
     return db_url
@@ -88,6 +90,7 @@ def raise_bad_request(message):
     """
 
     raise HTTPException(detail=message)
+
 
 # 1. First, it checks if the URL exists in the database.
 # 2. If it does, it returns the URL.
@@ -176,7 +179,7 @@ def create_url(url: schemas.URLBase, db: Session = Depends(get_db)):
 # 5. If the URL entry is not found, the function raises a NotFound exception.
 @app.get("/{url_key}")
 def forward_to_target_url(
-        url_key: str, request: Request, db: Session = Depends(get_db)
+    url_key: str, request: Request, db: Session = Depends(get_db)
 ):
     """_summary_
 

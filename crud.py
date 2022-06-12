@@ -10,7 +10,7 @@ from . import keygen, models, schemas
 # 4. Refresh the database object
 # 5. Return the database object
 def create_db_url(db: Session, url: schemas.URLBase) -> models.URL:
-    """ Create URL in the database
+    """Create URL in the database
 
     Args:
         db (Session): Connect to a database
@@ -43,7 +43,7 @@ def get_db_url_by_key(db: Session, url_key: str) -> models.URL:
         url_key (str): url key stored in database
 
     Returns:
-        models.URL: return a json of the URL 
+        models.URL: return a json of the URL
     """
     return (
         db.query(models.URL)
@@ -57,9 +57,9 @@ def get_db_url_by_key(db: Session, url_key: str) -> models.URL:
 # 3. Query the database for an active URL entry with the provided secret_key.
 # 4. Return the URL entry. Otherwise, return None.
 def get_db_url_by_secret_key(db: Session, secret_key: str) -> models.URL:
-    """Checks your database for an active database entry 
-    with the provided secret_key. 
-    
+    """Checks your database for an active database entry
+    with the provided secret_key.
+
     Args:
         db (Session): Connect to a database
         secret_key (str): url secret key stored in database

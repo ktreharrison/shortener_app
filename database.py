@@ -24,7 +24,9 @@ engine = create_engine(
     connect_args={"check_same_thread": False},
 )
 # Create a Local session
-SessionLocal: sessionmaker = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal: sessionmaker = sessionmaker(
+    autocommit=False, autoflush=False, bind=engine
+)
 
 # connects the database engine to the SQLAlchemy functionality of the models
 # It creates a base class that our class code will inherit from.
