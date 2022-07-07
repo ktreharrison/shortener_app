@@ -1,5 +1,6 @@
 # It allows us to cache the results of a function call.
 from functools import lru_cache
+
 from pydantic import BaseSettings
 
 

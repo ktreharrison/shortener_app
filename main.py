@@ -9,16 +9,15 @@
 # 9. Creating a HTMLResponse to the index page.
 # 10. Creating a get_index function to return the index page.
 import validators
-
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from starlette.datastructures import URL
-from fastapi.staticfiles import StaticFiles
 
 from . import crud, models, schemas
-from .database import SessionLocal, engine
 from .config import get_settings
+from .database import SessionLocal, engine
 
 # It creates a new FastAPI application object.
 app = FastAPI()
