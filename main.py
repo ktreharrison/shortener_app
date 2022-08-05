@@ -12,18 +12,27 @@ import validators
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from starlette.datastructures import URL
 
 from . import crud, models, schemas
 from .config import get_settings
 from .database import SessionLocal, engine
+from .library.helpers import openfile
+from .routers import accordion, twoforms, unsplash
 
 # It creates a new FastAPI application object.
 app = FastAPI()
 
+templates = Jinja2Templates(directory="templates")
+
 # It tells the application that the static files are located in the static directory
-app.mount("/static", StaticFiles(directory="./shortener_app/static"), name="static")
+app.mount("/static", StaticFiles(directory="./static"), name="static")
+
+app.include_router(unsplash.router)
+app.include_router(twoforms.router)
+app.include_router(accordion.router)
 
 # This code creates a database file in the directory of your choosing. Binds the database engine
 models.Base.metadata.create_all(bind=engine)
@@ -110,34 +119,21 @@ def raise_not_found(request):
 # main point of interaction
 # This code is a simple HTML page that welcomes the user to the URL shortener API.
 @app.get("/", response_class=HTMLResponse)
-def read_root():
+def read_root(request: Request):
     """The root path and delegates all incoming GET requests
 
     Returns:
         str: Welcomes user to the URL shortener App.
     """
+    data = openfile("home.md")
+    # data = {'page': "Home Page"}
 
-    return """
-<html lang="en">
-<head>
-    <title>Ken's URL Shortener </title>
-    <style>
-        .img {
-            text-align: center;
-        }
-    </style>
-</head>
-<body>
-    <br>
-    <h1 style="text-align: center">Welcome to the URL shortener API :)</h1>
-    <div class="img">
-        <img src="static/undraw_link_shortener_mvf6.svg" width="500" height="600">
-    </div>
-    <p style="text-align: center">by Ken Harrison</p>
-</body>
-</html>
-"""
+    return templates.TemplateResponse('page.html', {'request':request, 'data': data})
 
+@app.get("/page/{page_name}", response_class=HTMLResponse)
+def show_page(request: Request, page_name: str):
+    data = openfile(f"{page_name}.md")
+    return templates.TemplateResponse("page.html", {"request": request, "data": data})
 
 # 1. The first thing you do is create a URLInfo object that matches the
 #    URLInfo schema.
