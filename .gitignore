@@ -3,3 +3,4 @@ shortener.db
 .vscode/settings.json
 /-- SQLite.sql
 /test.py
+.DS_Store
